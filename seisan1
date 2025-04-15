@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Pedidos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #orders {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li.completed {
+            background-color: #28a745;
+            color: white;
+        }
+
+        li button {
+            background-color: #dc3545;
+        }
+
+        li button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerenciamento de Pedidos</h1>
+        <form id="order-form">
+            <input type="text" id="customer-name" placeholder="Mesa/Cliente" required>
+            <input type="text" id="order-description" placeholder="Descrição do Pedido" required>
+            <button type="submit">Adicionar Pedido</button>
+        </form>
+        <div id="orders">
+            <h2>Pedidos em Espera</h2>
+            <ul id="pending-orders"></ul>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const orderForm = document.getElementById('order-form');
+            const customerNameInput = document.getElementById('customer-name');
+            const orderDescriptionInput = document.getElementById('order-description');
+            const pendingOrdersList = document.getElementById('pending-orders');
+
+            const loadOrders = () => {
+                const orders = JSON.parse(localStorage.getItem('orders')) || [];
+                orders.forEach(order => addOrderToList(order));
+            };
+
+            const saveOrders = (orders) => {
+                localStorage.setItem('orders', JSON.stringify(orders));
+            };
+
+            const addOrderToList = (order) => {
+                const li = document.createElement('li');
+                li.textContent = `${order.customerName}: ${order.description}`;
+                if (order.completed) {
+                    li.classList.add('completed');
+                }
+                const completeButton = document.createElement('button');
+                completeButton.textContent = 'Concluir';
+                completeButton.addEventListener('click', () => {
+                    order.completed = !order.completed;
+                    li.classList.toggle('completed');
+                    saveOrders(getOrdersFromList());
+                });
+                li.appendChild(completeButton);
+                pendingOrdersList.appendChild(li);
+            };
+
+            const getOrdersFromList = () => {
+                const orders = [];
+                pendingOrdersList.querySelectorAll('li').forEach(li => {
+                    const [customerName, description] = li.textContent.split(': ');
+                    orders.push({
+                        customerName,
+                        description,
+                        completed: li.classList.contains('completed')
+                    });
+                });
+                return orders;
+            };
+
+            orderForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const order = {
+                    customerName: customerNameInput.value,
+                    description: orderDescriptionInput.value,
+                    completed: false
+                };
+                addOrderToList(order);
+                saveOrders(getOrdersFromList());
+                orderForm.reset();
+            });
+
+            loadOrders();
+        });
+    </script>
+</body>
+</html>
